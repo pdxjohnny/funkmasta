@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/pdxjohnny/getfunky/getfunky"
 )
 
 type API struct {
@@ -14,10 +16,6 @@ type API struct {
 }
 
 func (a *API) post(resource string, data url.Values) (*http.Response, error) {
-	// data := url.Values{}
-	// data.Set("name", "foo")
-	// data.Add("surname", "bar")
-
 	u, err := url.ParseRequestURI(a.endpoint)
 	if err != nil {
 		return nil, err
@@ -56,4 +54,35 @@ func readerToString(r io.Reader) (string, error) {
 	}
 
 	return b.String(), nil
+}
+
+func (a *API) Create(s *getfunky.Service) error {
+	v := url.Values{}
+	v.Set("name", s.Name)
+	v.Set("endpoint", s.Endpoint)
+	v.Set("payload", s.Payload)
+	v.Set("env", s.Env)
+
+	_, err := a.post(CREATE, v)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *API) parseCreate(p string) (*getfunky.Service, error) {
+	v, err := url.ParseQuery(p)
+	if err != nil {
+		return nil, err
+	}
+
+	s := &getfunky.Service{
+		Name:     v.Get("name"),
+		Endpoint: v.Get("endpoint"),
+		Payload:  v.Get("payload"),
+		Env:      v.Get("env"),
+	}
+
+	return s, nil
 }
