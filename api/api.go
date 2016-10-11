@@ -61,7 +61,7 @@ func (a *API) Create(s *getfunky.Service) error {
 	v.Set("name", s.Name)
 	v.Set("endpoint", s.Endpoint)
 	v.Set("payload", s.Payload)
-	v.Set("env", s.Env)
+	v.Set("env", s.EnvSetup)
 
 	_, err := a.post(CREATE, v)
 	if err != nil {
@@ -86,7 +86,7 @@ func ParseCreate(r io.Reader) (*getfunky.Service, error) {
 		Name:     v.Get("name"),
 		Endpoint: v.Get("endpoint"),
 		Payload:  v.Get("payload"),
-		Env:      v.Get("env"),
+		EnvSetup: v.Get("env"),
 	}
 
 	return s, nil

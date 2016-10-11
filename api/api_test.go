@@ -17,7 +17,7 @@ const (
 	expectedTestAPICreateEndpoint         = "service.name"
 	expectedTestAPICreatePayloadPlaintext = "def test():\n  print(\"Hello World\")"
 	expectedTestAPICreatePayloadBinary    = "\xbd\xb2\x3d\x00\xFF\xbc\x20\xe2\x8c\x98"
-	expectedTestAPICreateEnv              = "virtualenv .venv\n. .venv/bin/activate"
+	expectedTestAPICreateEnvSetup         = "virtualenv .venv\n. .venv/bin/activate"
 )
 
 func TestAPIpost(t *testing.T) {
@@ -73,8 +73,8 @@ func TestAPICreatePlaintext(t *testing.T) {
 			t.Fatalf("Expected: %v, got: %v", expectedTestAPICreateEndpoint, s.Endpoint)
 		} else if s.Payload != expectedTestAPICreatePayloadPlaintext {
 			t.Fatalf("Expected: %v, got: %v", expectedTestAPICreatePayloadPlaintext, s.Payload)
-		} else if s.Env != expectedTestAPICreateEnv {
-			t.Fatalf("Expected: %v, got: %v", expectedTestAPICreateEnv, s.Env)
+		} else if s.EnvSetup != expectedTestAPICreateEnvSetup {
+			t.Fatalf("Expected: %v, got: %v", expectedTestAPICreateEnvSetup, s.EnvSetup)
 		}
 	}))
 	defer ts.Close()
@@ -87,7 +87,7 @@ func TestAPICreatePlaintext(t *testing.T) {
 		Name:     expectedTestAPICreateName,
 		Endpoint: expectedTestAPICreateEndpoint,
 		Payload:  expectedTestAPICreatePayloadPlaintext,
-		Env:      expectedTestAPICreateEnv,
+		EnvSetup: expectedTestAPICreateEnvSetup,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -107,8 +107,8 @@ func TestAPICreateBinary(t *testing.T) {
 			t.Fatalf("Expected: %v, got: %v", expectedTestAPICreateEndpoint, s.Endpoint)
 		} else if s.Payload != expectedTestAPICreatePayloadBinary {
 			t.Fatalf("Expected: %v, got: %v", expectedTestAPICreatePayloadBinary, s.Payload)
-		} else if s.Env != expectedTestAPICreateEnv {
-			t.Fatalf("Expected: %v, got: %v", expectedTestAPICreateEnv, s.Env)
+		} else if s.EnvSetup != expectedTestAPICreateEnvSetup {
+			t.Fatalf("Expected: %v, got: %v", expectedTestAPICreateEnvSetup, s.EnvSetup)
 		}
 	}))
 	defer ts.Close()
@@ -121,7 +121,7 @@ func TestAPICreateBinary(t *testing.T) {
 		Name:     expectedTestAPICreateName,
 		Endpoint: expectedTestAPICreateEndpoint,
 		Payload:  expectedTestAPICreatePayloadBinary,
-		Env:      expectedTestAPICreateEnv,
+		EnvSetup: expectedTestAPICreateEnvSetup,
 	})
 	if err != nil {
 		t.Fatal(err)
