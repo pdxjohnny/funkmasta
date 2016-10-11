@@ -71,8 +71,13 @@ func (a *API) Create(s *getfunky.Service) error {
 	return nil
 }
 
-func (a *API) parseCreate(p string) (*getfunky.Service, error) {
-	v, err := url.ParseQuery(p)
+func ParseCreate(r io.Reader) (*getfunky.Service, error) {
+	q, err := readerToString(r)
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := url.ParseQuery(q)
 	if err != nil {
 		return nil, err
 	}
