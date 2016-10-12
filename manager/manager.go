@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/pdxjohnny/getfunky/api"
-	"github.com/pdxjohnny/getfunky/backend"
+	// "github.com/pdxjohnny/getfunky/backend"
 )
 
 func createHandler(w http.ResponseWriter, r *http.Request) {
-	s, err := api.ParseCreate(r.Body)
+	_, err := api.ParseCreate(r.Body)
 	if err != nil {
 		fmt.Fprintf(w, "%s", err.Error())
 	}
 
-	backend.Create(s)
+	// backend.Create(s)
 }
 
 func main() {
