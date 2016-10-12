@@ -10,6 +10,13 @@ import (
 	"github.com/pdxjohnny/getfunky/getfunky"
 )
 
+const (
+	TestName     = "testRunSetup"
+	TestEndpoint = "testRunSetup.service"
+	TestEnvSetup = "echo testEnvSetup\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
+	TestPayload  = "echo testPayload\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
+)
+
 func testFilePermissions(path string, perms os.FileMode) (os.FileInfo, error) {
 	// Check that path was created
 	i, err := os.Stat(path)
@@ -47,10 +54,10 @@ func testFileContents(path, contents string) error {
 
 func TestRunSetup(t *testing.T) {
 	s := NewService(&getfunky.Service{
-		Name:     "testRunSetup",
-		Endpoint: "testRunSetup.service",
-		EnvSetup: "testEnvSetup\x00\x34\x99\xFF\x00\x02\x01\x2a\x61",
-		Payload:  "testPayload\x00\x34\x99\xFF\x00\x02\x01\x2a\x61",
+		Name:     TestName,
+		Endpoint: TestEndpoint,
+		EnvSetup: TestEnvSetup,
+		Payload:  TestPayload,
 	})
 
 	err := s.RunSetup()
@@ -89,17 +96,27 @@ func TestRunSetup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = s.RunTeardown()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestRunTeardown(t *testing.T) {
 	s := NewService(&getfunky.Service{
-		Name:     "testRunSetup",
-		Endpoint: "testRunSetup.service",
-		EnvSetup: "testEnvSetup\x00\x34\x99\xFF\x00\x02\x01\x2a\x61",
-		Payload:  "testPayload\x00\x34\x99\xFF\x00\x02\x01\x2a\x61",
+		Name:     TestName,
+		Endpoint: TestEndpoint,
+		EnvSetup: TestEnvSetup,
+		Payload:  TestPayload,
 	})
 
-	err := s.RunTeardown()
+	err := s.RunSetup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = s.RunTeardown()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,5 +124,29 @@ func TestRunTeardown(t *testing.T) {
 	_, err = os.Stat(s.tempDir)
 	if err == nil {
 		t.Fatal(fmt.Errorf("s.tempDir %v was not removed"))
+	}
+}
+
+func TestRunEnvSetup(t *testing.T) {
+	s := NewService(&getfunky.Service{
+		Name:     TestName,
+		Endpoint: TestEndpoint,
+		EnvSetup: TestEnvSetup,
+		Payload:  TestPayload,
+	})
+
+	err := s.RunSetup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = s.RunEnvSetup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = s.RunTeardown()
+	if err != nil {
+		t.Fatal(err)
 	}
 }

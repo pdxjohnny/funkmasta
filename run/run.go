@@ -3,6 +3,7 @@ package run
 import (
 	"crypto/md5"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -73,38 +74,51 @@ func (s *Service) RunEnvSetup() error {
 	// Run EnvSetup with Env as r.Env
 	// The env of bash after this becomes the env of Payload
 	cmd := exec.Command("bash", "-e")
+	// Capture stdin out and err
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		return err
+		return fmt.Errorf("Getting EnvSetup stdin: %s", err.Error())
 	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("Getting EnvSetup stdout: %s", err.Error())
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("Getting EnvSetup stderr: %s", err.Error())
+	}
+	outputReader := io.MultiReader(stdout, stderr)
+
+	// Start the shell
 	err = cmd.Start()
 	if err != nil {
-		return err
+		return fmt.Errorf("Starting EnvSetup: %s", err.Error())
 	}
 
+	// Source the env setup file and capture the env after
 	delim := rand.Int63()
-	_, err = stdin.Write([]byte(fmt.Sprintf("source %s\necho %ld\nenv\nexit 0\n", s.envSetupFileName, delim)))
+	_, err = stdin.Write([]byte(fmt.Sprintf("source %s\necho %d\nenv\nexit 0\n", filepath.Join(s.tempDir, s.envSetupFileName), delim)))
 	if err != nil {
-		return err
+		return fmt.Errorf("Running EnvSetup: %s", err.Error())
 	}
+
+	outputBytes, err := ioutil.ReadAll(outputReader)
+	if err != nil {
+		return fmt.Errorf("Could not get EnvSetup output: %s", err.Error())
+	}
+	output := string(outputBytes)
 
 	err = cmd.Wait()
 	if err != nil {
-		return err
+		return fmt.Errorf("EnvSetup Failed: %s:\n%s", err.Error(), output)
 	}
 
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return err
-	}
-
-	outputArray := strings.Split(string(output), fmt.Sprintf("%ld", delim))
+	outputArray := strings.Split(string(output), fmt.Sprintf("%d", delim))
 	if len(outputArray) != 2 {
 		return fmt.Errorf("Could not get environment for %s", s.Name)
 	}
 
-	fmt.Println("source", outputArray[0])
-	fmt.Println("env", outputArray[1])
+	fmt.Println(outputArray[1])
 
 	return nil
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -22,11 +23,12 @@ const (
 
 func TestAPIpost(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		b, err := readerToString(r.Body)
+		bBytes, err := ioutil.ReadAll(r.Body)
 		r.Body.Close()
 		if err != nil {
 			t.Fatal(err)
 		}
+		b := string(bBytes)
 
 		v, err := url.ParseQuery(b)
 		if err != nil {
@@ -49,11 +51,12 @@ func TestAPIpost(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err := readerToString(r.Body)
+	bBytes, err := ioutil.ReadAll(r.Body)
 	r.Body.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	b := string(bBytes)
 
 	if expectedTestAPIpost != b {
 		t.Fatalf("Expected: %v, got: %v", expectedTestAPIpost, b)

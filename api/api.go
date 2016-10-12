@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -44,18 +45,6 @@ func (a *API) post(resource string, data url.Values) (*http.Response, error) {
 	return res, nil
 }
 
-func readerToString(r io.Reader) (string, error) {
-	b := new(bytes.Buffer)
-	l, err := b.ReadFrom(r)
-	if err != nil {
-		return "", err
-	} else if l < 1 {
-		return "", nil
-	}
-
-	return b.String(), nil
-}
-
 func (a *API) Create(s *getfunky.Service) error {
 	v := url.Values{}
 	v.Set("name", s.Name)
@@ -72,10 +61,11 @@ func (a *API) Create(s *getfunky.Service) error {
 }
 
 func ParseCreate(r io.Reader) (*getfunky.Service, error) {
-	q, err := readerToString(r)
+	qBytes, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
+	q := string(qBytes)
 
 	v, err := url.ParseQuery(q)
 	if err != nil {
