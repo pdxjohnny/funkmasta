@@ -59,7 +59,7 @@ func TestRunSetup(t *testing.T) {
 	}
 
 	// Make sure s.tempDir is only owner readable and writeable
-	i, err := testFilePermissions(s.tempDir, 0600)
+	i, err := testFilePermissions(s.tempDir, 020000000700)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -37,9 +37,9 @@ func NewService(gs *getfunky.Service) *Service {
 func (s *Service) RunSetup() error {
 	// Create a temporary directory to run this in
 	var err error
-	s.tempDir, err = ioutil.TempDir(s.envSetupFileName+s.payloadFileName, tempDirPrefix)
+	s.tempDir, err = ioutil.TempDir("", tempDirPrefix)
 	if err != nil {
-		return err
+		return fmt.Errorf("Creating TempDir: %s", err.Error())
 	}
 
 	// Create the EnvSetup file
@@ -49,7 +49,7 @@ func (s *Service) RunSetup() error {
 		0700,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("Writing EnvFile: %s", err.Error())
 	}
 
 	// Create the Payload file
@@ -59,7 +59,7 @@ func (s *Service) RunSetup() error {
 		0700,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("Writing Payload: %s", err.Error())
 	}
 
 	return nil
