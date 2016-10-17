@@ -23,6 +23,7 @@ type Service struct {
 	tempDir          string
 	envSetupFileName string
 	payloadFileName  string
+	payloadEnv       []string
 }
 
 func NewService(gs *getfunky.Service) *Service {
@@ -35,9 +36,26 @@ func NewService(gs *getfunky.Service) *Service {
 	return s
 }
 
+func (s *Service) RunValidate() error {
+	if len(s.EnvSetup) < 1 {
+		return fmt.Errorf("EnvSetup is empty")
+	}
+
+	if len(s.Payload) < 1 {
+		return fmt.Errorf("Payload is empty")
+	}
+
+	return nil
+}
+
 func (s *Service) RunSetup() error {
+	// Make sure we have everything we need
+	err := s.RunValidate()
+	if err != nil {
+		return err
+	}
+
 	// Create a temporary directory to run this in
-	var err error
 	s.tempDir, err = ioutil.TempDir("", tempDirPrefix)
 	if err != nil {
 		return fmt.Errorf("Creating TempDir: %s", err.Error())
@@ -124,10 +142,10 @@ func (s *Service) RunEnvSetup() error {
 		return fmt.Errorf("Could not get environment for %s", s.Name)
 	}
 
-	cmd.Env = strings.Split(outputArray[1], "\n")
+	s.payloadEnv = strings.Split(outputArray[1], "\n")
 
 	found := false
-	for _, i := range cmd.Env {
+	for _, i := range s.payloadEnv {
 		j := strings.SplitN(i, "=", 2)
 		if j[0] == "RUN_ENVSETUP_TEST_WORKING" {
 			found = true
@@ -137,7 +155,7 @@ func (s *Service) RunEnvSetup() error {
 	if !found {
 		return fmt.Errorf(
 			"RUN_ENVSETUP_TEST_WORKING was not found in environment\n%v\n",
-			cmd.Env,
+			s.payloadEnv,
 		)
 	}
 
@@ -146,6 +164,9 @@ func (s *Service) RunEnvSetup() error {
 
 func (s *Service) RunPayload(r *getfunky.Request) error {
 	// Run Payload withe Env as r.Env send Stdout and Stderr to r.Output
+	if s.payloadEnv == nil {
+		return fmt.Errorf("payloadEnv is nil, has RunEnvSetup been called yet?")
+	}
 
 	return nil
 }
