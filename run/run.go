@@ -74,6 +74,8 @@ func (s *Service) RunEnvSetup() error {
 	// Run EnvSetup with Env as r.Env
 	// The env of bash after this becomes the env of Payload
 	cmd := exec.Command("bash", "-e")
+	// Make the env empty
+	cmd.Env = make([]string, 10)
 	// Capture stdin out and err
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -97,7 +99,11 @@ func (s *Service) RunEnvSetup() error {
 
 	// Source the env setup file and capture the env after
 	delim := rand.Int63()
-	_, err = stdin.Write([]byte(fmt.Sprintf("source %s\necho %d\nenv\nexit 0\n", filepath.Join(s.tempDir, s.envSetupFileName), delim)))
+	_, err = stdin.Write([]byte(fmt.Sprintf(
+		"source %s\necho %d\nexport RUN_ENVSETUP_TEST_WORKING=true\nenv\nexit 0\n",
+		filepath.Join(s.tempDir, s.envSetupFileName),
+		delim,
+	)))
 	if err != nil {
 		return fmt.Errorf("Running EnvSetup: %s", err.Error())
 	}
@@ -118,7 +124,22 @@ func (s *Service) RunEnvSetup() error {
 		return fmt.Errorf("Could not get environment for %s", s.Name)
 	}
 
-	fmt.Println(outputArray[1])
+	cmd.Env = strings.Split(outputArray[1], "\n")
+
+	found := false
+	for _, i := range cmd.Env {
+		j := strings.SplitN(i, "=", 2)
+		if j[0] == "RUN_ENVSETUP_TEST_WORKING" {
+			found = true
+		}
+	}
+
+	if !found {
+		return fmt.Errorf(
+			"RUN_ENVSETUP_TEST_WORKING was not found in environment\n%v\n",
+			cmd.Env,
+		)
+	}
 
 	return nil
 }
