@@ -36,6 +36,25 @@ func NewService(gs *getfunky.Service) *Service {
 	return s
 }
 
+func envArrayToMap(a []string) map[string]string {
+	m := make(map[string]string, 10)
+	for _, i := range a {
+		j := strings.SplitN(i, "=", 2)
+		if len(j) == 2 {
+			m[j[0]] = j[1]
+		}
+	}
+	return m
+}
+
+func envMapToArray(m map[string]string) []string {
+	a := make([]string, 10)
+	for k, v := range m {
+		a = append(a, k+"="+v)
+	}
+	return a
+}
+
 func (s *Service) RunValidate() error {
 	if len(s.EnvSetup) < 1 {
 		return fmt.Errorf("EnvSetup is empty")
@@ -166,6 +185,50 @@ func (s *Service) RunPayload(r *getfunky.Request) error {
 	// Run Payload withe Env as r.Env send Stdout and Stderr to r.Output
 	if s.payloadEnv == nil {
 		return fmt.Errorf("payloadEnv is nil, has RunEnvSetup been called yet?")
+	}
+
+	// Run Payload with Env as r.Env
+	// The env of bash after this becomes the env of Payload
+	cmd := exec.Command(filepath.Join(s.tempDir, s.payloadFileName))
+	// Make the env the sent in env
+	env := envArrayToMap(r.Env)
+	// Overwite with the EnvSetup env
+	payloadEnv := envArrayToMap(s.payloadEnv)
+	for k, v := range payloadEnv {
+		env[k] = v
+	}
+	cmd.Env = envMapToArray(env)
+	// Capture stdout and err
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return fmt.Errorf("Getting Payload stdin: %s", err.Error())
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("Getting Payload stdout: %s", err.Error())
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("Getting Payload stderr: %s", err.Error())
+	}
+	outputReader := io.MultiReader(stdout, stderr)
+
+	// Start the shell
+	err = cmd.Start()
+	if err != nil {
+		return fmt.Errorf("Starting Payload: %s", err.Error())
+	}
+
+	// Send the input to the command
+	go func() {
+		io.Copy(stdin, r.Body)
+	}()
+	// Send the output to the client
+	io.Copy(r.Output, outputReader)
+
+	err = cmd.Wait()
+	if err != nil {
+		return fmt.Errorf("Payload Failed: %s", err.Error())
 	}
 
 	return nil

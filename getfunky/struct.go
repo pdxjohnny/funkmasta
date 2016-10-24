@@ -12,7 +12,7 @@ type Service struct {
 }
 
 type Request struct {
-	Env    map[string]string
+	Env    []string
 	Body   io.Reader
 	Output io.Writer
 }

@@ -1,20 +1,23 @@
 package run
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/pdxjohnny/getfunky/getfunky"
 )
 
 const (
-	TestName     = "testRunSetup"
-	TestEndpoint = "testRunSetup.service"
-	TestEnvSetup = "echo testEnvSetup\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
-	TestPayload  = "echo testPayload\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
+	TestName          = "testRunSetup"
+	TestEndpoint      = "testRunSetup.service"
+	TestEnvSetup      = "#!/bin/sh\necho testEnvSetup\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
+	TestPayload       = "#!/bin/sh\necho testPayload\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
+	TestPayloadOutput = "testPayload\n\x00\x34\x99\xFF\x00\x02\x01\x2a\x61\n"
 )
 
 func testFilePermissions(path string, perms os.FileMode) (os.FileInfo, error) {
@@ -143,6 +146,46 @@ func TestRunEnvSetup(t *testing.T) {
 	err = s.RunEnvSetup()
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	err = s.RunTeardown()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRunPayload(t *testing.T) {
+	s := NewService(&getfunky.Service{
+		Name:     TestName,
+		Endpoint: TestEndpoint,
+		EnvSetup: TestEnvSetup,
+		Payload:  TestPayload,
+	})
+
+	err := s.RunSetup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = s.RunEnvSetup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ob := new(bytes.Buffer)
+	r := &getfunky.Request{
+		Env:    []string{"TestRunPayload=42"},
+		Body:   strings.NewReader("Endpoint = " + TestEndpoint),
+		Output: ob,
+	}
+	err = s.RunPayload(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	o := ob.String()
+	if o != TestPayloadOutput {
+		t.Fatal(fmt.Errorf("Payload output was %v should be %v", o, TestPayloadOutput))
 	}
 
 	err = s.RunTeardown()
