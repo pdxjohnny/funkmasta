@@ -4,20 +4,23 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/pdxjohnny/getfunky/getfunky"
+	"github.com/pdxjohnny/getfunky/url"
 )
 
 const (
 	TestName          = "testRunSetup"
 	TestEndpoint      = "testRunSetup.service"
 	TestEnvSetup      = "#!/bin/sh\necho testEnvSetup\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
-	TestPayload       = "#!/bin/sh\necho testPayload\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
-	TestPayloadOutput = "testPayload\n\x00\x34\x99\xFF\x00\x02\x01\x2a\x61\n"
+	TestPayload       = "#!/bin/sh\necho $TestRunPayload\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
+	TestPayloadOutput = "42\n\x00\x34\x99\xFF\x00\x02\x01\x2a\x61\n"
 )
 
 func testFilePermissions(path string, perms os.FileMode) (os.FileInfo, error) {
@@ -184,6 +187,65 @@ func TestRunPayload(t *testing.T) {
 	}
 
 	o := ob.String()
+	if o != TestPayloadOutput {
+		t.Fatal(fmt.Errorf("Payload output was %v should be %v", o, TestPayloadOutput))
+	}
+
+	err = s.RunTeardown()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRunPayloadHTTP(t *testing.T) {
+	s := NewService(&getfunky.Service{
+		Name:     TestName,
+		Endpoint: TestEndpoint,
+		EnvSetup: TestEnvSetup,
+		Payload:  TestPayload,
+	})
+
+	err := s.RunSetup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = s.RunEnvSetup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Server runs request
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		defer req.Body.Close()
+
+		r := &getfunky.Request{
+			Env:    url.EnvArray(req.URL.Query()),
+			Body:   req.Body,
+			Output: w,
+		}
+
+		err = s.RunPayload(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}))
+	defer ts.Close()
+
+	// Client asks server to run request
+	body := strings.NewReader("Endpoint = " + TestEndpoint)
+	r, err := http.Post(ts.URL+"?TestRunPayload=42", "application/octet-stream", body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Body.Close()
+
+	ob, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	o := string(ob)
 	if o != TestPayloadOutput {
 		t.Fatal(fmt.Errorf("Payload output was %v should be %v", o, TestPayloadOutput))
 	}
