@@ -1,43 +1,77 @@
 package api
 
 import (
-	"bytes"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/pdxjohnny/getfunky/getfunky"
 )
 
+// API is an http.Client associated with an endpoint, e.g. getfunky.example.com
+// the API can access services of that endpoint or create, update, and delete
+// services on that encpoint
 type API struct {
+	http.Client
 	token    string
 	endpoint string
 }
 
-func (a *API) post(resource string, data url.Values) (*http.Response, error) {
+// Get wraps http.Client.Get so that url is the path from the endpoint
+func (a *API) Get(path string) (resp *http.Response, err error) {
 	u, err := url.ParseRequestURI(a.endpoint)
 	if err != nil {
 		return nil, err
 	}
-	u.Path = resource
+	u.Path = path
 
-	encoded := data.Encode()
-	req, err := http.NewRequest(
-		"POST",
-		u.String(),
-		bytes.NewBufferString(encoded),
-	)
+	return a.Client.Get(u.String())
+}
+
+// Head wraps http.Client.Get so that url is the path from the endpoint
+func (a *API) Head(path string) (resp *http.Response, err error) {
+	u, err := url.ParseRequestURI(a.endpoint)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", a.token)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Content-Length", strconv.Itoa(len(encoded)))
+	u.Path = path
 
-	c := &http.Client{}
-	res, err := c.Do(req)
+	return a.Client.Head(u.String())
+}
+
+// Post wraps http.Client.Get so that url is the path from the endpoint
+func (a *API) Post(path string, bodyType string, body io.Reader) (resp *http.Response, err error) {
+	u, err := url.ParseRequestURI(a.endpoint)
+	if err != nil {
+		return nil, err
+	}
+	u.Path = path
+
+	return a.Client.Post(u.String(), bodyType, body)
+}
+
+// PostForm wraps http.Client.Get so that url is the path from the endpoint
+func (a *API) PostForm(path string, data url.Values) (resp *http.Response, err error) {
+	u, err := url.ParseRequestURI(a.endpoint)
+	if err != nil {
+		return nil, err
+	}
+	u.Path = path
+
+	return a.Client.PostForm(u.String(), data)
+}
+
+// PostService is used to interact with (call) created services
+func (a *API) PostService(service string, data url.Values, body io.Reader) (*http.Response, error) {
+	u, err := url.ParseRequestURI(a.endpoint)
+	if err != nil {
+		return nil, err
+	}
+	u.Path = service
+	u.RawQuery = data.Encode()
+
+	res, err := a.Client.Post(u.String(), "application/octet-stream", body)
 	if err != nil {
 		return nil, err
 	}
@@ -45,6 +79,8 @@ func (a *API) post(resource string, data url.Values) (*http.Response, error) {
 	return res, nil
 }
 
+// Create tells the endpoint to create a new service with the data from
+// getfunky.Service
 func (a *API) Create(s *getfunky.Service) error {
 	v := url.Values{}
 	v.Set("name", s.Name)
@@ -52,7 +88,7 @@ func (a *API) Create(s *getfunky.Service) error {
 	v.Set("payload", s.Payload)
 	v.Set("env", s.EnvSetup)
 
-	_, err := a.post(CREATE, v)
+	_, err := a.PostForm(CREATE, v)
 	if err != nil {
 		return err
 	}

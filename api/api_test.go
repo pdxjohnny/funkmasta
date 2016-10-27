@@ -46,7 +46,7 @@ func TestAPIpost(t *testing.T) {
 	v := url.Values{}
 	v.Set("key", expectedTestAPIpost)
 
-	r, err := a.post("/test", v)
+	r, err := a.PostForm("/test", v)
 	if err != nil {
 		t.Fatal(err)
 	}
