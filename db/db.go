@@ -53,5 +53,16 @@ func (d *DB) Load() error {
 	return nil
 }
 
-func (d *DB) Update() {
+func (d *DB) Update(key string, value interface{}) {
+	d.mem[key] = value
+	d.Save()
+}
+
+func (d *DB) Get(key string) interface{} {
+	v, ok := d.mem[key]
+	if !ok {
+		return nil
+	}
+
+	return v
 }
