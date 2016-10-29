@@ -18,9 +18,9 @@ import (
 const (
 	TestName          = "testRunSetup"
 	TestEndpoint      = "testRunSetup.service"
-	TestEnvSetup      = "#!/bin/sh\necho testEnvSetup\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
-	TestPayload       = "#!/bin/sh\necho $TestRunPayload\necho -e \"\\x00\\x34\\x99\\xFF\\x00\\x02\\x01\\x2a\\x61\""
-	TestPayloadOutput = "42\n\x00\x34\x99\xFF\x00\x02\x01\x2a\x61\n"
+	TestEnvSetup      = "#!/bin/sh\necho testEnvSetup\n"
+	TestPayload       = "#!/bin/sh\necho $TestRunPayload\n"
+	TestPayloadOutput = "42\n"
 )
 
 func testFilePermissions(path string, perms os.FileMode) (os.FileInfo, error) {
