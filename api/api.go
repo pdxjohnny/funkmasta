@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/pdxjohnny/getfunky/getfunky"
+	"github.com/pdxjohnny/funkmasta/funkmasta"
 )
 
-// API is an http.Client associated with an endpoint, e.g. getfunky.example.com
+// API is an http.Client associated with an endpoint, e.g. funkmasta.example.com
 // the API can access services of that endpoint or create, update, and delete
 // services on that encpoint
 type API struct {
@@ -80,8 +80,8 @@ func (a *API) PostService(service string, data url.Values, body io.Reader) (*htt
 }
 
 // Create tells the endpoint to create a new service with the data from
-// getfunky.Service
-func (a *API) Create(s *getfunky.Service) error {
+// funkmasta.Service
+func (a *API) Create(s *funkmasta.Service) error {
 	v := url.Values{}
 	v.Set("name", s.Name)
 	v.Set("endpoint", s.Endpoint)
@@ -96,7 +96,7 @@ func (a *API) Create(s *getfunky.Service) error {
 	return nil
 }
 
-func ParseCreate(r io.Reader) (*getfunky.Service, error) {
+func ParseCreate(r io.Reader) (*funkmasta.Service, error) {
 	qBytes, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func ParseCreate(r io.Reader) (*getfunky.Service, error) {
 		return nil, err
 	}
 
-	s := &getfunky.Service{
+	s := &funkmasta.Service{
 		Name:     v.Get("name"),
 		Endpoint: v.Get("endpoint"),
 		Payload:  v.Get("payload"),

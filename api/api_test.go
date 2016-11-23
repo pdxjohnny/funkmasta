@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/pdxjohnny/getfunky/getfunky"
+	"github.com/pdxjohnny/funkmasta/funkmasta"
 )
 
 const (
@@ -86,7 +86,7 @@ func TestAPICreatePlaintext(t *testing.T) {
 		endpoint: ts.URL,
 	}
 
-	err := a.Create(&getfunky.Service{
+	err := a.Create(&funkmasta.Service{
 		Name:     expectedTestAPICreateName,
 		Endpoint: expectedTestAPICreateEndpoint,
 		Payload:  expectedTestAPICreatePayloadPlaintext,
@@ -120,7 +120,7 @@ func TestAPICreateBinary(t *testing.T) {
 		endpoint: ts.URL,
 	}
 
-	err := a.Create(&getfunky.Service{
+	err := a.Create(&funkmasta.Service{
 		Name:     expectedTestAPICreateName,
 		Endpoint: expectedTestAPICreateEndpoint,
 		Payload:  expectedTestAPICreatePayloadBinary,

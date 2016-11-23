@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pdxjohnny/getfunky/getfunky"
-	"github.com/pdxjohnny/getfunky/url"
+	"github.com/pdxjohnny/funkmasta/funkmasta"
+	"github.com/pdxjohnny/funkmasta/url"
 )
 
 const (
@@ -59,7 +59,7 @@ func testFileContents(path, contents string) error {
 }
 
 func TestRunSetup(t *testing.T) {
-	s := NewService(&getfunky.Service{
+	s := NewService(&funkmasta.Service{
 		Name:     TestName,
 		Endpoint: TestEndpoint,
 		EnvSetup: TestEnvSetup,
@@ -110,7 +110,7 @@ func TestRunSetup(t *testing.T) {
 }
 
 func TestRunTeardown(t *testing.T) {
-	s := NewService(&getfunky.Service{
+	s := NewService(&funkmasta.Service{
 		Name:     TestName,
 		Endpoint: TestEndpoint,
 		EnvSetup: TestEnvSetup,
@@ -134,7 +134,7 @@ func TestRunTeardown(t *testing.T) {
 }
 
 func TestRunEnvSetup(t *testing.T) {
-	s := NewService(&getfunky.Service{
+	s := NewService(&funkmasta.Service{
 		Name:     TestName,
 		Endpoint: TestEndpoint,
 		EnvSetup: TestEnvSetup,
@@ -158,7 +158,7 @@ func TestRunEnvSetup(t *testing.T) {
 }
 
 func TestRunPayload(t *testing.T) {
-	s := NewService(&getfunky.Service{
+	s := NewService(&funkmasta.Service{
 		Name:     TestName,
 		Endpoint: TestEndpoint,
 		EnvSetup: TestEnvSetup,
@@ -176,7 +176,7 @@ func TestRunPayload(t *testing.T) {
 	}
 
 	ob := new(bytes.Buffer)
-	r := &getfunky.Request{
+	r := &funkmasta.Request{
 		Env:    []string{"TestRunPayload=42"},
 		Body:   strings.NewReader("Endpoint = " + TestEndpoint),
 		Output: ob,
@@ -198,7 +198,7 @@ func TestRunPayload(t *testing.T) {
 }
 
 func TestRunPayloadHTTP(t *testing.T) {
-	s := NewService(&getfunky.Service{
+	s := NewService(&funkmasta.Service{
 		Name:     TestName,
 		Endpoint: TestEndpoint,
 		EnvSetup: TestEnvSetup,
@@ -219,7 +219,7 @@ func TestRunPayloadHTTP(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		defer req.Body.Close()
 
-		r := &getfunky.Request{
+		r := &funkmasta.Request{
 			Env:    url.EnvArray(req.URL.Query()),
 			Body:   req.Body,
 			Output: w,

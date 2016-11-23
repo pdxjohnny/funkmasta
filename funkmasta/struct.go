@@ -1,4 +1,4 @@
-package getfunky
+package funkmasta
 
 import (
 	"io"

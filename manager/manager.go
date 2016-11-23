@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pdxjohnny/getfunky/api"
-	// "github.com/pdxjohnny/getfunky/backend"
+	"github.com/pdxjohnny/funkmasta/api"
+	// "github.com/pdxjohnny/funkmasta/backend"
 )
 
 func createHandler(w http.ResponseWriter, r *http.Request) {

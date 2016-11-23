@@ -11,22 +11,22 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pdxjohnny/getfunky/getfunky"
+	"github.com/pdxjohnny/funkmasta/funkmasta"
 )
 
 const (
-	tempDirPrefix = "getfunky_run"
+	tempDirPrefix = "funkmasta_run"
 )
 
 type Service struct {
-	*getfunky.Service
+	*funkmasta.Service
 	tempDir          string
 	envSetupFileName string
 	payloadFileName  string
 	payloadEnv       []string
 }
 
-func NewService(gs *getfunky.Service) *Service {
+func NewService(gs *funkmasta.Service) *Service {
 	s := &Service{
 		Service:          gs,
 		tempDir:          "",
@@ -181,7 +181,7 @@ func (s *Service) RunEnvSetup() error {
 	return nil
 }
 
-func (s *Service) RunPayload(r *getfunky.Request) error {
+func (s *Service) RunPayload(r *funkmasta.Request) error {
 	// Run Payload withe Env as r.Env send Stdout and Stderr to r.Output
 	if s.payloadEnv == nil {
 		return fmt.Errorf("payloadEnv is nil, has RunEnvSetup been called yet?")
